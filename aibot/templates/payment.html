@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stylish Payment Gateway</title>
+    {% load static %}
+    <style>
+        body {
+            background-image:  url("{% static 'images/fotor-ai-20240907192234.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            background-color: #f0f2f5;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+.payment-container {
+    background-color: rgba(255, 255, 255, 0.51);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    text-align: center;
+    color: rgb(74, 72, 72);
+}
+
+h2 {
+    margin-bottom: 20px;
+    color: #000000;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #000000;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    color: #000000;
+}
+
+.input-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.input-row .input-group {
+    width: 48%;
+}
+
+.pay-btn {
+    width: 100%;
+    padding: 15px;
+    background-color:rgba(0, 0, 0, 0.808);
+    border: 5px solid black;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.pay-btn:hover {
+    background-color: rgb(142, 143, 144);
+}
+
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <h2>Payment Details</h2>
+        <form id="paymentForm">
+            <div class="input-group">
+                <label for="cardNumber">Card Number</label>
+                <input type="text" id="cardNumber" placeholder="xxxx xxxx xxxx xxxx" required>
+            </div>
+            <div class="input-group">
+                <label for="cardName">Cardholder Name</label>
+                <input type="text" id="cardName" placeholder="Enter Name" required>
+            </div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="expiryDate">Expiry Date</label>
+                    <input type="text" id="expiryDate" placeholder="MM/YY" required>
+                </div>
+                <div class="input-group">
+                    <label for="cvv">CVV</label>
+                    <input type="password" id="cvv" placeholder="xxx" required>
+                </div>
+            </div>
+            <button type="button" class="pay-btn" onclick="handlePayment()">Pay Now</button>
+        </form>
+    </div>
+    <script>
+        document.getElementById('paymentForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent form submission
+
+    const cardNumber = document.getElementById('cardNumber').value;
+    const cardName = document.getElementById('cardName').value;
+    const expiryDate = document.getElementById('expiryDate').value;
+    const cvv = document.getElementById('cvv').value;
+
+    if (validateCardNumber(cardNumber) && validateExpiryDate(expiryDate) && validateCVV(cvv)) {
+        alert('Payment Successful!');
+    } else {
+        alert('Please enter valid payment details.');
+    }
+});
+function handlePayment() {
+        window.location.href = "{% url 'success' %}";
+    }
+
+function validateCardNumber(number) {
+    return /^\d{4} \d{4} \d{4} \d{4}$/.test(number);
+}
+
+function validateExpiryDate(date) {
+    return /^(0[1-9]|1[0-2])\/\d{2}$/.test(date);
+}
+
+function validateCVV(cvv) {
+    return /^\d{3}$/.test(cvv);
+}
+
+    </script>
+</body>
+</html>

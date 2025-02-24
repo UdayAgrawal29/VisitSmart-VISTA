@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Successful</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- jsPDF for PDF generation -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url("file:///C:/Users/Uday%20Agrawal/Desktop/SIH/backgrd_img.jpg"); /* Update to correct path */
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: rgb(235, 232, 232);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        h2 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .success-icon {
+            font-size: 48px;
+            color: #28a745;
+        }
+        .qr-code {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+        .btn-group {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .download-btn, .download-qr-btn {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .download-btn:hover, .download-qr-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><i class="fas fa-check-circle success-icon"></i> Booking Successful</h2>
+        <p>Your booking has been confirmed. Please find your booking QR code below.</p>
+        <div class="qr-code" id="qrcode"></div> <!-- QR code container -->
+        <div class="btn-group">
+            <a href="#" class="download-qr-btn" id="downloadQr">Download QR</a> <!-- QR button -->
+            <a href="#" class="download-btn" id="downloadPdf">Download PDF</a> <!-- PDF button -->
+        </div>
+    </div>
+
+    <script>
+        // Booking details
+        const bookingDetails = {
+            bookingId: "123123",
+            name: "Aditya",
+            date: "2024-09-08",
+            event: "Museum Visit",
+            ticketType: "VIP"
+        };
+
+        // Generate the QR code
+        const qrCodeText = `Booking ID: ${bookingDetails.bookingId}\nName: ${bookingDetails.name}\nDate: ${bookingDetails.date}\nEvent: ${bookingDetails.event}\nTicket: ${bookingDetails.ticketType}`;
+        const qrcodeElement = document.getElementById("qrcode");
+        const qrcode = new QRCode(qrcodeElement, {
+            text: qrCodeText,
+            width: 200,
+            height: 200
+        });
+
+        // Download QR code as an image
+        document.getElementById('downloadQr').addEventListener('click', function (e) {
+            e.preventDefault();
+            console.log("Download QR button clicked");
+            const canvas = qrcodeElement.querySelector('canvas');
+            if (canvas) {
+                const qrImage = canvas.toDataURL('image/png'); // Convert QR code to data URL
+
+                // Create a link element to download the image
+                const link = document.createElement('a');
+                link.href = qrImage;
+                link.download = 'qr_code.png'; // Filename for the downloaded QR code
+                link.click();
+            } else {
+                console.error('QR Code not generated yet.');
+            }
+        });
+
+        // Download PDF functionality using jsPDF
+        document.getElementById('downloadPdf').addEventListener('click', function (e) {
+            e.preventDefault();
+            console.log("Download PDF button clicked");
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Header background color and title
+            doc.setFillColor(0, 51, 153); // Dark blue background for header
+            doc.rect(0, 0, 210, 40, 'F'); // Rectangle for header
+            doc.setTextColor(255, 255, 255); // White text
+            doc.setFontSize(20);
+            doc.text('Museum Visit Ticket', 105, 25, { align: 'center' });
+
+            // Booking Information Section with light background
+            doc.setFillColor(240, 240, 240); // Light gray background
+            doc.rect(10, 50, 190, 80, 'F'); // Info box
+            doc.setTextColor(0, 0, 0); // Black text
+            doc.setFontSize(16);
+            doc.text(`Booking ID: ${bookingDetails.bookingId}`, 20, 65);
+            doc.text(`Name: ${bookingDetails.name}`, 20, 80);
+            doc.text(`Date: ${bookingDetails.date}`, 20, 95);
+            doc.text(`Event: ${bookingDetails.event}`, 20, 110);
+            doc.text(`Ticket: ${bookingDetails.ticketType}`, 20, 125);
+
+            // Insert QR code in the PDF
+            const qrCanvas = qrcodeElement.querySelector('canvas');
+            if (qrCanvas) {
+                const qrImage = qrCanvas.toDataURL('image/png');
+                doc.addImage(qrImage, 'PNG', 130, 60, 50, 50); // Add QR code image
+            } else {
+                console.error('QR Code not found.');
+            }
+
+            // Footer with dark background
+            doc.setFillColor(0, 51, 153); // Dark blue background
+            doc.rect(0, 280, 210, 20, 'F'); // Footer background
+            doc.setTextColor(255, 255, 255); // White text
+            doc.setFontSize(12);
+            doc.text('Thank you for your booking! Enjoy your visit.', 105, 290, { align: 'center' });
+
+            // Save the generated PDF
+            doc.save('booking_confirmation.pdf');
+        });
+    </script>
+</body>
+</html>

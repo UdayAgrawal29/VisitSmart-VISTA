@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCSM - National Council of Science Museums</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #000000ab;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            height: 10vh;
+        }
+
+        header img {
+            height: 50px;
+        }
+
+        .logo {
+            margin-left: 50px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-right: 30px;
+        }
+
+        nav ul li a {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.207);
+            padding: 10px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 400;
+            border: 1px solid rgb(104, 105, 105);
+        }
+        
+        nav ul li a:hover {
+            border: 3px solid rgb(65, 63, 63);
+            background-color: rgb(0, 0, 0);
+            border-radius: 5px;
+        }
+
+        .language-toggle {
+            background-color: #ffffff61;
+            color: #ffffff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .image-background {
+            background-image: url(./fotor-ai-20240907192234.jpg);
+            background-size: cover;
+            background-position: center;
+
+        }
+
+        .hero {
+            height: 55vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            text-align: center;
+            position: relative;
+        }
+        .hero-overlay {
+            background-color: rgba(2, 2, 2, 0.4);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            z-index: 1;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+
+        .cta-button {
+            background-color: #ffcc00;
+            color: #003366;
+            border-radius: 8px;
+            padding: 15px 30px;
+            text-transform: uppercase;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            z-index: 1;
+            margin-top: 20px;
+        }
+        
+        .cta-button:hover {
+            background-color: #f4de86;
+
+        }
+
+
+        .chatbot-preview {
+            padding: 50px;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            text-align: center;
+            height: 35vh;
+        }
+        
+        .chatbot-preview h2 {
+            font-size: rem;
+            margin-bottom: 20px;
+        }
+        
+        .chatbot-preview img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .book-tickets {
+            text-decoration: none;
+            color: white;
+            padding: 10px 20px;
+
+        }
+        
+        .footer {
+            background-color: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Chatbot Icon */
+        .chatbot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #003366;
+            color: #fff;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .chatbot i {
+            font-size: 2rem;
+        }
+         /* Styling the hamburger menu */
+         .hamburger-menu {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .hamburger-menu .line {
+            width: 30px;
+            height: 4px;
+            background-color: #ffffff;
+            margin: 5px 0;
+        }
+
+        /* Sidebar Menu Styling */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px; /* Fully hidden off-screen */
+            width: 250px;
+            height: 100%;
+            background-color: #16161695;
+            border: #1b1a1a95;
+            transition: left 0.3s ease; /* Smooth sliding effect */
+            z-index: 9;
+            padding: 20px;
+            box-shadow: 3px 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar.show {
+            left: 0; /* Slide in when .show is added */
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .sidebar a:hover {
+            background-color: #535151;
+        }
+
+        /* Close button for sidebar */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 20px;
+            cursor: pointer;
+            color: white;
+        }
+        .social-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .social-button {
+            display: flex;
+            width: 50px;
+            justify-content: center;
+            align-items: center;
+            height: 50px;
+            border-radius: 50%;
+            color: white;
+            text-decoration: none;
+            font-size: 24px;
+            transition: background-color 0.3s, transform 0.3s;
+            line-height: 50px;
+        }
+
+        .social-button:hover {
+            transform: scale(1.1);
+        }
+
+        .facebook {
+            background-color: #3b5998;
+        }
+
+        .twitter {
+            background-color: #1da1f2;
+        }
+
+        .instagram {
+            background-color: #e4405f;
+        }
+
+        .linkedin {
+            background-color: #0077b5;
+        }
+
+        .facebook:hover {
+            background-color: #2d4373;
+        }
+
+        .twitter:hover {
+            background-color: #1a91da;
+        }
+
+        .instagram:hover {
+            background-color: #d82e6f;
+        }
+
+        .linkedin:hover {
+            background-color: #005582;
+        }
+
+        .header-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-button {
+            margin-right: 30px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.384);
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="image-background" style='background-image: url("{% static "images/fotor-ai-20240907192234.jpg" %}");'>
+        <!-- Header Section -->
+        <header>
+            <div class="logo">
+                <!-- Use Django static tags for images -->
+                <img src="{% static 'images/museum_logo.png' %}" alt="Ministry of Culture">
+                <img src="{% static 'images/ncsm_logo.png' %}" alt="NCSM">
+            </div>
+            <div class="header-buttons">
+                <button class="login-button" onclick="window.location.href='{% url 'login' %}';">LOGIN</button>
+
+                <button class="language-toggle">EN | HI</button>
+            </div>
+             <!-- Hamburger Menu -->
+            <div class="hamburger-menu" id="hamburger-menu">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+
+            <!-- Sidebar Menu -->
+            <div id="sidebar" class="sidebar">
+                <span class="close-btn" id="close-btn">&times;</span>
+                <br><br>
+                <a href="#">Admin</a>
+                <a href="{% url 'admin_login_view' %}">Contact Us</a>
+                <a href="#">SOS</a>
+            </div>
+        </header>
+        <section class="hero">
+            <div class="hero-overlay"></div>
+            <h1>Explore Science, Innovation, and History</h1>
+            <p>Welcome to the National Council of Science Museums</p>
+            <button class="cta-button" onclick="window.location.href='{% url 'login' %}';">Start Your Virtual Tour</button>
+
+        </section>
+    
+        <!-- Chatbot Preview Section -->
+        <section class="chatbot-preview">
+            <h2>Meet Our ChatBot-VISTA</h2>
+            <p>Our Chatbot is here to assist you with bookings, information, and more.</p>
+            <button class="cta-button" onclick="window.location.href='{% url 'login' %}';">BOOK TICKETS NOW</button>
+        </section>
+    
+        <!-- Footer Section -->
+        <footer class="footer">
+            <p>&copy; 2024 National Council of Science Museums. All rights reserved.</p>
+            <div class="social-buttons">
+                <a href="https://www.facebook.com" target="_blank" class="social-button facebook" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.twitter.com" target="_blank" class="social-button twitter" title="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="https://www.instagram.com" target="_blank" class="social-button instagram" title="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.linkedin.com" target="_blank" class="social-button linkedin" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Chatbot Floating Icon -->
+    <div class="chatbot">
+        <i class="fas fa-comments"></i>
+    </div>
+
+    <script>
+        // JavaScript remains the same
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const sidebar = document.getElementById('sidebar');
+        const closeBtn = document.getElementById('close-btn');
+
+        hamburgerMenu.addEventListener('click', function() {
+            sidebar.classList.add('show');
+        });
+
+        closeBtn.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!sidebar.contains(event.target) && !hamburgerMenu.contains(event.target)) {
+                sidebar.classList.remove('show');
+            }
+        });
+        
+    </script>
+</body>
+</html>

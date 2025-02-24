@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Museum Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/pikaday.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/css/pikaday.min.css">
+    {% load static %}
+    <style>
+        body {
+            background-image:  url("{% static "images/fotor-ai-20240907192234.jpg" %}");
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chart-container {
+            max-width: 600px;
+            max-height: 300px;
+            margin: 0 auto;
+        }
+        #queueChart {
+            max-width: 700px;
+            max-height: 350px;
+        }
+        .text-3xl-font-bold-mb-4 {
+            color: white;
+            font-weight: 700;
+            font-size: 40px; 
+        }
+        .block-text-sm-font-medium-text-gray-700 {
+            color: white;
+            font-size: 30px;
+        }
+        .container-mx-auto-p-4 {
+            background-color: rgba(0, 0, 0, 0.399);
+            padding: 20px;
+            margin: 50px 100px;
+        }
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        td {
+            word-wrap: break-word;
+        }
+        .table-fixed {
+            table-layout: fixed;
+        }
+        .table-fixed th {
+            white-space: nowrap;
+        }
+        /* Additional CSS for SOS dialog */
+#sosDialog {
+    /* Centered and full-screen overlay */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 70vh;
+    height: 70vh;
+    background-color: rgba(255, 0, 0, 0.8);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    text-align: center;
+}
+
+#sosMessage {
+    /* Additional styling for SOS message */
+    font-size: 3rem;
+}
+
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container-mx-auto-p-4">
+        <h1 class="text-3xl-font-bold-mb-4">Museum Admin Dashboard</h1>
+        
+        <!-- Calendar -->
+        <div class="mb-4">
+            <label for="datepicker" class="block-text-sm-font-medium-text-gray-700">Select Date:</label>
+            <input type="text" id="datepicker" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex mb-4 bg-white p-2 rounded shadow">
+            <button onclick="showSection('queue')" class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mr-2">Queue vs Time</button>
+            <button onclick="showSection('seats')" class="flex-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mr-2">Available Seats</button>
+            <button onclick="showSection('users')" class="flex-1 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 mr-2">Users Table</button>
+            <button onclick="showSection('waitingList')" class="flex-1 px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 mr-2">Waiting List Management</button>
+            <button onclick="showSection('revenueReport')" class="flex-1 px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 mr-2">Revenue Report</button>
+            <button onclick="showSection('cancellationStats')" class="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 mr-2">Cancellation Statistics</button>
+            <button onclick="showSection('bookingStatus')" class="flex-1 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 mr-2">Booking Status Filter</button>
+            <button onclick="showSection('museumInsights')" class="flex-1 px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 mr-2">Museum-Specific Insights</button>
+            <button onclick="showSection('paymentStatus')" class="flex-1 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 mr-2">Payment Status Overview</button>
+        </div>
+        
+        <!-- Queue vs Time Section -->
+        <div id="queueSection" class="section bg-white p-4 rounded shadow">
+            <h2 class="text-xl font-semibold mb-2">Queue vs Time</h2>
+            <div class="chart-container">
+                <canvas id="queueChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Available Seats Section -->
+        <div id="seatsSection" class="section bg-white p-4 rounded shadow hidden">
+            <h2 class="text-xl font-semibold mb-2">Available Seats</h2>
+            <div class="chart-container">
+                <canvas id="seatsChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Users Table Section -->
+        <div id="usersSection" class="section bg-white p-4 rounded shadow hidden">
+            <h2 class="text-xl font-semibold mb-2">Users Table</h2>
+            <div class="table-container">
+                <table class="table-fixed">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Waiting List Management Section -->
+        <div id="waitingListSection" class="section bg-white p-4 rounded shadow hidden">
+            <h2 class="text-xl font-semibold mb-2">Waiting List Management</h2>
+            <div class="table-container">
+                <table class="table-fixed">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Slot</th>
+                            <th>Username</th>
+                            <th>Number of Tickets</th>
+                        </tr>
+                    </thead>
+                    <tbody id="waitingListTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Revenue Report Section -->
+<div id="revenueReportSection" class="section bg-white p-4 rounded shadow hidden">
+    <h2 class="text-xl font-semibold mb-2">Revenue Report</h2>
+    <div class="table-container">
+        <table class="table-fixed">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Total Revenue</th> <!-- Calculate from Number of Tickets -->
+                </tr>
+            </thead>
+            <tbody id="revenueReportTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Cancellation Statistics Section -->
+<div id="cancellationStatsSection" class="section bg-white p-4 rounded shadow hidden">
+    <h2 class="text-xl font-semibold mb-2">Cancellation Statistics</h2>
+    <div class="table-container">
+        <table class="table-fixed">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Cancellations</th> <!-- Determine from Booking Status -->
+                    <th>Reason</th> <!-- Requires additional data or assumptions -->
+                </tr>
+            </thead>
+            <tbody id="cancellationStatsTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Booking Status Overview Section -->
+<div id="bookingStatusSection" class="section bg-white p-4 rounded shadow hidden">
+    <h2 class="text-xl font-semibold mb-2">Booking Status Overview</h2>
+    <div class="table-container">
+        <table class="table-fixed">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>Slot</th>
+                    <th>Username</th>
+                    <th>Number of Tickets</th>
+                    <th>Booking Status</th>
+                </tr>
+            </thead>
+            <tbody id="bookingStatusTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Museum Insights Section -->
+<div id="museumInsightsSection" class="section bg-white p-4 rounded shadow hidden">
+    <h2 class="text-xl font-semibold mb-2">Museum Insights</h2>
+    <div class="table-container">
+        <table class="table-fixed">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Total Bookings</th> <!-- Derived from Booking ID -->
+                    <th>Average Waiting Time</th> <!-- Requires additional data -->
+                    <th>Peak Time</th> <!-- Requires additional data -->
+                </tr>
+            </thead>
+            <tbody id="museumInsightsTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+
+        <!-- Cancellation Statistics Section -->
+        <div id="cancellationStatsSection" class="section bg-white p-4 rounded shadow hidden">
+            <h2 class="text-xl font-semibold mb-2">Cancellation Statistics</h2>
+            <div class="table-container">
+                <table class="table-fixed">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Number of Cancellations</th>
+                            <th>Cancellation Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cancellationStatsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Booking Status Filter Section -->
+        <div id="bookingStatusSection" class="section bg-white p-4 rounded shadow hidden">
+            <h2 class="text-xl font-semibold mb-2">Booking Status Filter</h2>
+            <div class="table-container">
+                <table class="table-fixed">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Slot</th>
+                            <th>Username</th>
+                            <th>Number of Tickets</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingStatusTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Museum-Specific Insights Section -->
+        <div id="museumInsightsSection" class="section bg-white p-4 rounded shadow hidden">
+            <h2 class="text-xl font-semibold mb-2">Museum-Specific Insights</h2>
+            <div class="table-container">
+                <table class="table-fixed">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Total Bookings</th>
+                            <th>Average Waiting Time</th>
+                            <th>Peak Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="museumInsightsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Payment Status Overview Section -->
+        <div id="paymentStatusSection" class="section bg-white p-4 rounded shadow hidden">
+            <h2 class="text-xl font-semibold mb-2">Payment Status Overview</h2>
+            <div class="table-container">
+                <table class="table-fixed">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Slot</th>
+                            <th>Username</th>
+                            <th>Number of Tickets</th>
+                            <th>Payment Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentStatusTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Page Button to Show Aggregated Feedback Review -->
+<div class="admin-actions">
+    <button onclick="showFeedbackAnalysis()" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+        Show Feedback Analysis
+    </button>
+</div>
+
+<!-- Section to Display Feedback Analysis Data -->
+<div id="feedbackAnalysis" class="hidden bg-white p-4 rounded shadow mt-4">
+    <h2 class="text-xl font-semibold mb-2">Feedback Analysis</h2>
+    <div id="analysisContent"></div>
+</div>
+
+    <!-- SOS Dialog -->
+    
+
+<script src="admin.js"></script>
+
+
+    <script>
+        // Initialize date picker
+var picker = new Pikaday({
+    field: document.getElementById('datepicker'),
+    format: 'D MMM YYYY',
+    onSelect: function(date) {
+        updateDashboard(date);
+    }
+});
+
+// Global variables for chart instances
+let queueChart, seatsChart;
+
+// Initialize Queue vs Time Chart
+const queueCtx = document.getElementById('queueChart').getContext('2d');
+function initQueueChart(data) {
+    if (queueChart) queueChart.destroy();  // Destroy previous instance if exists
+    queueChart = new Chart(queueCtx, {
+        type: 'line',
+        data: {
+            labels: ['9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM'],
+            datasets: [{
+                label: 'Queue Length',
+                data: data,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Initialize Available Seats Chart
+const seatsCtx = document.getElementById('seatsChart').getContext('2d');
+function initSeatsChart(data) {
+    if (seatsChart) seatsChart.destroy();  // Destroy previous instance if exists
+    seatsChart = new Chart(seatsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM'],
+            datasets: [{
+                label: 'Available Seats',
+                data: data,
+                backgroundColor: 'rgb(54, 162, 235)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Function to update charts based on the selected date
+function updateDashboard(date) {
+    // Simulate fetching new data based on date (In real app, fetch data from server)
+    const newQueueData = generateRandomData();  // Replace with actual data fetching
+    const newSeatsData = generateRandomData();  // Replace with actual data fetching
+    
+    initQueueChart(newQueueData);
+    initSeatsChart(newSeatsData);
+}
+
+// Function to generate random data (for demo purposes)
+function generateRandomData() {
+    return Array.from({length: 8}, () => Math.floor(Math.random() * 100));
+}
+
+// Show the selected section and hide others
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(section => section.classList.add('hidden'));
+    document.getElementById(sectionId + 'Section').classList.remove('hidden');
+}
+
+// Initialize Users Table
+const users = [
+    { id: 1, name: 'Dev', email: 'dev@gmail.com' },
+    { id: 2, name: 'Harsh', email: 'harsh@gmail.com' },
+    { id: 3, name: 'Rahul', email: 'rahul@gmail.com' },
+];
+
+const usersTableBody = document.getElementById('usersTableBody');
+users.forEach(user => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${user.id}</td>
+        <td>${user.name}</td>
+        <td>${user.email}</td>
+    `;
+    usersTableBody.appendChild(row);
+});
+
+// Initialize Waiting List Overview
+const waitingList = [
+    { id: 1, date: '2024-09-30', slot: '9 AM - 10 AM', username: 'Om', tickets: 3 },
+    { id: 2, date: '2024-09-30', slot: '11 AM - 12 PM', username: 'Arnav', tickets: 2 },
+];
+
+const waitingListTableBody = document.getElementById('waitingListTableBody');
+waitingList.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${item.id}</td>
+        <td>${item.date}</td>
+        <td>${item.slot}</td>
+        <td>${item.username}</td>
+        <td>${item.tickets}</td>
+    `;
+    waitingListTableBody.appendChild(row);
+});
+
+// Initialize Booking Status Overview
+const bookingStatus = [
+    { id: 1, date: '2024-09-19', slot: '9 AM - 10 AM', username: 'SIH2024_Demo', tickets: 4, status: 'Confirmed' },
+    { id: 2, date: '2024-09-19', slot: '11 AM - 12 PM', username: 'Aditya', tickets: 1, status: 'Pending' },
+];
+
+const bookingStatusTableBody = document.getElementById('bookingStatusTableBody');
+bookingStatus.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${item.id}</td>
+        <td>${item.date}</td>
+        <td>${item.slot}</td>
+        <td>${item.username}</td>
+        <td>${item.tickets}</td>
+        <td>${item.status}</td>
+    `;
+    bookingStatusTableBody.appendChild(row);
+});
+
+// Initialize Museum Insights
+const museumInsights = [
+    { date: '2024-09-18', totalBookings: 50, avgWaitingTime: '10 min', peakTime: '2 PM' },
+    { date: '2024-09-17', totalBookings: 30, avgWaitingTime: '15 min', peakTime: '11 AM' },
+];
+
+const museumInsightsTableBody = document.getElementById('museumInsightsTableBody');
+museumInsights.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${item.date}</td>
+        <td>${item.totalBookings}</td>
+        <td>${item.avgWaitingTime}</td>
+        <td>${item.peakTime}</td>
+    `;
+    museumInsightsTableBody.appendChild(row);
+});
+
+// Initialize Payment Status Overview
+const paymentStatus = [
+    { id: 1, date: '2024-09-19', slot: '9 AM - 10 AM', username: 'SIH2024_Demo', tickets: 4, paymentStatus: 'Completed' },
+    { id: 2, date: '2024-09-18', slot: '11 AM - 12 PM', username: 'Uday', tickets: 1, paymentStatus: 'Pending' },
+];
+
+const paymentStatusTableBody = document.getElementById('paymentStatusTableBody');
+paymentStatus.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${item.id}</td>
+        <td>${item.date}</td>
+        <td>${item.slot}</td>
+        <td>${item.username}</td>
+        <td>${item.tickets}</td>
+        <td>${item.paymentStatus}</td>
+    `;
+    paymentStatusTableBody.appendChild(row);
+});
+
+// Initialize charts with default data
+initQueueChart([10, 20, 35, 50, 40, 30, 25, 15]);
+initSeatsChart([100, 80, 60, 40, 50, 70, 85, 95]);
+
+// Show Queue vs Time section by default
+showSection('queue');
+
+
+// Function to show feedback analysis
+async function showFeedbackAnalysis() {
+    const feedbackAnalysisElement = document.getElementById('feedbackAnalysis');
+    feedbackAnalysisElement.classList.remove('hidden');
+    
+    const analysisContent = document.getElementById('analysisContent');
+    analysisContent.innerHTML = '<p>Loading data...</p>';
+
+    try {
+        const data = await fetchFeedbackAnalysisData();
+        if (data) {
+            analysisContent.innerHTML = generateAnalysisHTML(data);
+        } else {
+            analysisContent.innerHTML = '<p>No data available.</p>';
+        }
+    } catch (error) {
+        console.error('Error fetching or processing data:', error);
+        analysisContent.innerHTML = '<p>Error loading data. Please try again.</p>';
+    }
+}
+
+// Function to fetch data from Google Sheets
+async function fetchFeedbackAnalysisData() {
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSs4WkvYo_0mE8F6ukawEJnDZRt1mft7eM5r1Qc06iYjmmYtWkJv4ulbDiUuZsSyG1ayvnllAV_Ipew/pub?output=csv';
+    const response = await fetch(sheetURL);
+    if (!response.ok) throw new Error('Network response was not ok.');
+    const csvData = await response.text();
+    return processCSVData(csvData);
+}
+
+// Function to process CSV data
+function processCSVData(csvData) {
+    const rows = csvData.trim().split('\n').map(row => row.split(','));
+    if (rows.length < 2) {
+        throw new Error('CSV data is empty or invalid');
+    }
+    return aggregateData(rows);
+}
+
+// Function to aggregate data
+function aggregateData(rows) {
+    const overallRatings = {};
+    const cleanlinessRatings = {};
+    const exhibitRatings = {};
+    const additionalComments = [];
+
+    const headers = rows[0];
+    const overallIndex = headers.indexOf('Overall Rating');
+    const cleanlinessIndex = headers.indexOf('Cleanliness');
+    const exhibitIndex = headers.indexOf('Exhibits');
+    const commentsIndex = headers.indexOf('Additional Comments');
+
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.length === 0) continue;
+
+        if (overallIndex !== -1) {
+            const overallRating = row[overallIndex];
+            overallRatings[overallRating] = (overallRatings[overallRating] || 0) + 1;
+        }
+
+        if (cleanlinessIndex !== -1) {
+            const cleanliness = row[cleanlinessIndex];
+            cleanlinessRatings[cleanliness] = (cleanlinessRatings[cleanliness] || 0) + 1;
+        }
+
+        if (exhibitIndex !== -1) {
+            const exhibit = row[exhibitIndex];
+            exhibitRatings[exhibit] = (exhibitRatings[exhibit] || 0) + 1;
+        }
+
+        if (commentsIndex !== -1) {
+            const comments = row[commentsIndex];
+            if (comments) {
+                additionalComments.push(comments);
+            }
+        }
+    }
+
+    return {
+        overallRatings,
+        cleanlinessRatings,
+        exhibitRatings,
+        additionalComments
+    };
+}
+
+// Function to generate HTML for the feedback analysis data
+function generateAnalysisHTML(data) {
+    let html = '<h3>Overall Ratings:</h3>';
+    html += generateRatingHTML(data.overallRatings);
+
+    html += '<h3>Cleanliness Ratings:</h3>';
+    html += generateRatingHTML(data.cleanlinessRatings);
+
+    html += '<h3>Exhibit Ratings:</h3>';
+    html += generateRatingHTML(data.exhibitRatings);
+
+    html += '<h3>Additional Comments:</h3>';
+    html += data.additionalComments.map(comment => `<p>${comment}</p>`).join('');
+
+    return html;
+}
+
+function generateRatingHTML(ratings) {
+    return Object.entries(ratings)
+        .map(([rating, count]) => `<p>Rating ${rating}: ${count}</p>`)
+        .join('');
+}
+
+let flashInterval;
+
+
+    </script>
+</body>
+</html>
